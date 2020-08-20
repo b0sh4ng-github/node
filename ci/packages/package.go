@@ -177,6 +177,11 @@ func PackageAndroid() error {
 	if err != nil {
 		return err
 	}
+
+	if v3Branch {
+		os.Setenv(env.Str(env.BuildVersion), "0.0.0-1betanet-"+env.Str(env.BuildNumber))
+	}
+
 	pomFileOut, err := os.Create("build/package/mvn.pom")
 	if err != nil {
 		return err

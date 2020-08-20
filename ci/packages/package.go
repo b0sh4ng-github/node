@@ -147,10 +147,12 @@ func PackageIOS() error {
 
 // PackageAndroid builds and stores Android package
 func PackageAndroid() error {
+	branch, _ := os.LookupEnv("BUILD_BRANCH")
+	v3Branch := branch == "v3-apk"
 	job.Precondition(func() bool {
 		pr, _ := env.IsPR()
 		fullBuild, _ := env.IsFullBuild()
-		return !pr || fullBuild
+		return !pr || fullBuild || v3Branch
 	})
 	logconfig.Bootstrap()
 
@@ -189,6 +191,13 @@ func PackageAndroid() error {
 	if err != nil {
 		return err
 	}
+
+	if v3Branch {
+		if err := storage.UploadArtifacts(); err != nil {
+			return err
+		}
+	}
+
 	return env.IfRelease(storage.UploadArtifacts)
 }
 

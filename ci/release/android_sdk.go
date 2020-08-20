@@ -40,7 +40,7 @@ const (
 	BintrayToken = env.BuildVar("BINTRAY_TOKEN")
 )
 
-// ReleaseAndroidSDKSnapshot releases Android SKD snapshot from master branch to Bintray
+// ReleaseAndroidSDKSnapshot releases Android SDK snapshot from master branch to Bintray
 func ReleaseAndroidSDKSnapshot() error {
 	logconfig.Bootstrap()
 
@@ -57,7 +57,13 @@ func ReleaseAndroidSDKSnapshot() error {
 		return nil
 	}
 
-	return releaseAndroidSDK()
+	return releaseAndroidSDK(env.Str(env.BuildVersion))
+}
+
+// ReleaseAndroidSDKBetanet releases Android SDK snapshot from v3 branch to Bintray
+func ReleaseAndroidSDKBetanet() error {
+	logconfig.Bootstrap()
+	return releaseAndroidSDK("0.0.0-betanet")
 }
 
 // ReleaseAndroidSDK releases Android SDK to Bintray
@@ -76,10 +82,10 @@ func ReleaseAndroidSDK() error {
 		return nil
 	}
 
-	return releaseAndroidSDK()
+	return releaseAndroidSDK(env.Str(env.BuildVersion))
 }
 
-func releaseAndroidSDK() error {
+func releaseAndroidSDK(version string) error {
 	err := storage.DownloadArtifacts()
 	if err != nil {
 		return err
@@ -97,7 +103,7 @@ func releaseAndroidSDK() error {
 		&releaseOpts{
 			groupId:    "network.mysterium",
 			artifactId: "mobile-node",
-			version:    env.Str(env.BuildVersion),
+			version:    version,
 		},
 		&bintrayOpts{
 			repositoryURL: repositoryURL,

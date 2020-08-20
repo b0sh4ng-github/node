@@ -171,7 +171,7 @@ func (up *bintrayReleaser) bintrayAPIRequest(method string, url url.URL, body io
 	}
 	req.SetBasicAuth(up.bintrayOpts.username, up.bintrayOpts.password)
 	req.Header.Set("X-Bintray-Package", up.releaseOpts.groupId+":"+up.releaseOpts.artifactId)
-	req.Header.Set("X-Bintray-Version", env.Str(env.BuildVersion))
+	req.Header.Set("X-Bintray-Version", up.releaseOpts.version)
 	res, err := up.client.Do(req)
 	if err != nil {
 		return err

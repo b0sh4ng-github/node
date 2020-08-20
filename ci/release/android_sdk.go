@@ -63,7 +63,7 @@ func ReleaseAndroidSDKSnapshot() error {
 // ReleaseAndroidSDKBetanet releases Android SDK snapshot from v3 branch to Bintray
 func ReleaseAndroidSDKBetanet() error {
 	logconfig.Bootstrap()
-	return releaseAndroidSDK("0.0.0-betanet")
+	return releaseAndroidSDK("0.0.0-1betanet-" + env.Str(env.BuildNumber))
 }
 
 // ReleaseAndroidSDK releases Android SDK to Bintray

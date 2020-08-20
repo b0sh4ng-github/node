@@ -178,9 +178,12 @@ func PackageAndroid() error {
 		return err
 	}
 
+	buildVersion := env.Str(env.BuildVersion)
 	if v3Branch {
-		os.Setenv(env.Str(env.BuildVersion), "0.0.0-1betanet-"+env.Str(env.BuildNumber))
+		buildVersion = "0.0.0-1betanet-" + env.Str(env.BuildNumber)
 	}
+
+	log.Info().Msgf("Prepared android SDK version: %s from %s", buildVersion, branch)
 
 	pomFileOut, err := os.Create("build/package/mvn.pom")
 	if err != nil {
@@ -191,7 +194,7 @@ func PackageAndroid() error {
 	err = pomTemplate.Execute(pomFileOut, struct {
 		BuildVersion string
 	}{
-		BuildVersion: env.Str(env.BuildVersion),
+		BuildVersion: buildVersion,
 	})
 	if err != nil {
 		return err

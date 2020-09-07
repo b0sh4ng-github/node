@@ -65,8 +65,12 @@ func Test_Provider_Registrar_needsHandling(t *testing.T) {
 }
 
 func Test_Provider_Registrar_RegistersProvider(t *testing.T) {
-	mt := mockTransactor{}
-	mrsp := mockRegistrationStatusProvider{}
+	mt := mockTransactor{
+		bountyResult: true,
+	}
+	mrsp := mockRegistrationStatusProvider{
+		status: Unregistered,
+	}
 	cfg := ProviderRegistrarConfig{}
 	registrar := NewProviderRegistrar(&mt, &mrsp, cfg)
 
@@ -92,6 +96,40 @@ func Test_Provider_Registrar_RegistersProvider(t *testing.T) {
 
 	_, ok := registrar.registeredIdentities[mockEvent.event.ProviderID]
 	assert.True(t, ok)
+}
+
+func Test_Provider_Registrar_Does_NotRegisterWithNoBounty(t *testing.T) {
+	mt := mockTransactor{
+		bountyResult: false,
+	}
+	mrsp := mockRegistrationStatusProvider{
+		status: Unregistered,
+	}
+	cfg := ProviderRegistrarConfig{}
+	registrar := NewProviderRegistrar(&mt, &mrsp, cfg)
+
+	mockEvent := queuedEvent{
+		event: servicestate.AppEventServiceStatus{
+			Status:     "Running",
+			ProviderID: "0xsuchIDManyWow",
+		},
+		retries: 0,
+	}
+	done := make(chan struct{})
+
+	go func() {
+		err := registrar.start()
+		assert.Nil(t, err)
+		done <- struct{}{}
+	}()
+
+	registrar.consumeServiceEvent(mockEvent.event)
+
+	registrar.stop()
+	<-done
+
+	_, ok := registrar.registeredIdentities[mockEvent.event.ProviderID]
+	assert.False(t, ok)
 }
 
 func Test_Provider_Registrar_FailsAfterRetries(t *testing.T) {
@@ -136,6 +174,8 @@ type mockTransactor struct {
 	registerError error
 	feesToReturn  FeesResponse
 	feesError     error
+	bountyError   error
+	bountyResult  bool
 }
 
 func (mt *mockTransactor) FetchRegistrationFees() (FeesResponse, error) {
@@ -144,4 +184,8 @@ func (mt *mockTransactor) FetchRegistrationFees() (FeesResponse, error) {
 
 func (mt *mockTransactor) RegisterIdentity(identity string, regReqDTO *IdentityRegistrationRequestDTO) error {
 	return mt.registerError
+}
+
+func (mt *mockTransactor) CheckIfRegistrationBountyEligible(identity identity.Identity) (bool, error) {
+	return mt.bountyResult, mt.bountyError
 }
